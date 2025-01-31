@@ -15,13 +15,20 @@ import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import SignUpPage from "./pages/SignUpPage";
 import { useAuthStore } from "./store/useAuthStore";
+import { useThemeStore } from "./store/useThemeStore";
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+  const { theme } = useThemeStore();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    document.body.classList.add("bg-base-100"); // Ensures consistent background
+  }, [theme]);
 
   if (isCheckingAuth && !authUser)
     return (
@@ -51,7 +58,7 @@ const App = () => {
             element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
           />
           <Route path="/settings" element={<SettingsPage />} />
-         </Route>
+        </Route>
         {/* Fallback for 404 Not Found */}
         <Route path="*" element={<NotFoundPage />} />
       </>
