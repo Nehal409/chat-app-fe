@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 
-const BASE_URL = "http://localhost:5000";
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -120,7 +120,7 @@ export const useAuthStore = create((set, get) => ({
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
 
-    const socket = io(BASE_URL, {
+    const socket = io(baseUrl, {
       query: { userId: authUser._id },
     });
 
