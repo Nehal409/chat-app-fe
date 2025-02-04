@@ -1,6 +1,7 @@
 import toast from "react-hot-toast";
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
+import { useAuthStore } from "./useAuthStore";
 
 export const useChatStore = create((set, get) => ({
   messages: [],
@@ -48,8 +49,6 @@ export const useChatStore = create((set, get) => ({
     const accessToken = localStorage.getItem("accessToken");
     const { selectedUser, messages } = get();
     try {
-      console.log(messageData);
-      
       const res = await axiosInstance.post(
         `/messages/users/${selectedUser._id}`,
         messageData,
@@ -59,13 +58,33 @@ export const useChatStore = create((set, get) => ({
           },
         }
       );
-      console.log(res);
-      console.log(res.data.data.messages.text);
 
-      set({ messages: [...messages, res.data.data.messages.text] }); // Keep all the previous messages and add the very last one message to the end.
+      set({ messages: [...messages, res.data.data.messages] }); // Keep all the previous messages and add the very last one message to the end.
     } catch (error) {
       toast.error(error?.response?.data?.error.message);
     }
+  },
+
+  subscribeToMessages: () => {
+    const { selectedUser } = get();
+    if (!selectedUser) return;
+
+    const socket = useAuthStore.getState().socket;
+
+    socket.on("receiveMessage", (message) => {
+      const isMessageSentFromSelectedUser =
+        message.senderId === selectedUser._id;
+      if (!isMessageSentFromSelectedUser) return;
+
+      set({
+        messages: [...get().messages, message],
+      });
+    });
+  },
+
+  unsubscribeFromMessages: () => {
+    const socket = useAuthStore.getState().socket;
+    socket.off("receiveMessage");
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
